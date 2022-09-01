@@ -1,5 +1,24 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" style="margin:20px 60px; ">
+    <div class="search-contailer"  >
+      <el-form :inline="true" :model="searchMap" >
+        <el-form-item label="商品id">
+          <el-input v-model="searchMap.productId" placeholder="商品id"></el-input>
+        </el-form-item>
+        <el-form-item label="商品名称">
+          <el-input v-model="searchMap.productName" placeholder="商品名称"></el-input>
+        </el-form-item>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch()">筛选</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="add-product" style="display: flex;justify-content: flex-start;margin-left: 10px;">
+      <el-button  type="primary" round>添加商品</el-button>
+    </div>
+    <div class="table-container" style="margin-top: 10px;">
+
     <el-table
       :data="tableData"
       border
@@ -27,7 +46,7 @@
       <el-table-column
         prop="pic"
         label="商品图片"
-
+        show-overflow-tooltip
       ></el-table-column>
       <el-table-column
         prop="price"
@@ -44,6 +63,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
 
     <div class="pagination-container" style="margin: 20px;display: flex;justify-content: right;">
         <el-pagination
@@ -63,7 +83,7 @@
 </template>
 
 <script>
-  import {listProduct}  from '@/api/product'
+  import {listProduct,updateProduct,deleteProduct}  from '@/api/product'
 
   export default {
 
@@ -73,6 +93,10 @@
         total:0,
         pageSize:10,
         currentPage:1,
+        searchMap: {
+                  productId: null,
+                  productName: null
+        }
 
       }
     },
@@ -83,11 +107,13 @@
       getList(){
         let params={
           pageNo:this.currentPage,
-          pageSize:this.pageSize
+          pageSize:this.pageSize,
+          productId:this.productId,
+          productName:this.productName
         }
+        //请求后台接口
         listProduct(params)
           .then(res=>{
-            console.log(res)
             this.tableData=res.data.list;
             this.total=res.data.total;
             this.pageSize=res.data.pageSize;
@@ -107,6 +133,41 @@
       },
       handleDelete(row){
         console.log(row)
+        this.$confirm('确认删除商品?', '提示', {
+                  confirmButtonText: '确定',
+                  cancelButtonText: '取消',
+                  type: 'warning'
+                }).then(() => {//确认删除
+                  deleteProduct(row.productId)
+                    .then(res=>{//删除成功
+                      this.currentPage=1;
+                      this.pageSize=10;
+                      this.getList();
+                      this.$message({
+                        message: '删除成功!',
+                        type: 'success'
+                      });
+                    }).catch(err=>{//删除失败
+                        this.$message({
+                          message: '删除失败！',
+                          type: 'danger'
+                        })
+                      })
+                }).catch(() => { //取消删除
+                  this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                  });
+                });
+
+
+      },
+      handleSearch(){
+        this.productId=this.searchMap.productId;
+        this.productName=this.searchMap.productName;
+        this.currentPage=1;
+        this.pageSize=10;
+        this.getList()
       }
     }
   }
