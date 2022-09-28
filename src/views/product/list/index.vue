@@ -130,6 +130,7 @@
       },
       handleUpdate(row){
         console.log(row)
+        
       },
       handleDelete(row){
         console.log(row)
